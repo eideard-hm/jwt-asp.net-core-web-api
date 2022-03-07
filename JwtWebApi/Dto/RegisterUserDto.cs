@@ -1,6 +1,6 @@
 ﻿namespace JwtWebApi.Models
 {
-    public class UserDto
+    public class RegisterUserDto
     {
         public string Username { get; set; }
         public string Email { get; set; }

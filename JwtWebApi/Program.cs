@@ -1,4 +1,6 @@
 using JwtWebApi.Context;
+using JwtWebApi.Interfaces;
+using JwtWebApi.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,9 @@ builder.Services.AddDbContext<DataContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+// Inyección de dependencias
+builder.Services.AddTransient<IAuthService, AuthService>();
 
 var app = builder.Build();
 
