@@ -9,21 +9,24 @@ using System.Security.Claims;
 
 namespace JwtWebApi.Services
 {
-    public class AuthService: IAuthService
+    public class AuthService : IAuthService
     {
         private readonly DataContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IUserService _userService;
 
         public AuthService(DataContext context,
-                            IConfiguration configuration)
+                            IConfiguration configuration,
+                            IUserService userService)
         {
             _context = context;
             _configuration = configuration;
+            _userService = userService;
         }
 
         public async Task<bool> Register(User user)
         {
-            if (UserExists(user.Username, user.Email)) return false;
+            if (_userService.UserExists(user.Username, user.Email)) return false;
             user.Password = PasswordHashBcrypt(user.Password);
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -36,7 +39,7 @@ namespace JwtWebApi.Services
             if (existsUser is null) return null;
 
             var validatePassword = verifyPassword(user.Password, existsUser.Password);
-            if (!validatePassword) return null; 
+            if (!validatePassword) return null;
 
             return existsUser;
         }
@@ -49,13 +52,16 @@ namespace JwtWebApi.Services
                 new Claim(ClaimTypes.Name, user.Username)
             };
 
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration.GetSection("AppSettings:Token").Value));
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_configuration.GetSection("Jwt:Key").Value));
 
             var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
             var token = new JwtSecurityToken(
+                 issuer: _configuration.GetSection("Jwt:Issuer").Value,
+                 audience: _configuration.GetSection("Jwt:Audience").Value,
                 claims: claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: DateTime.UtcNow.AddDays(1),
+                notBefore: DateTime.UtcNow,
                 signingCredentials: cred
                 );
 
@@ -70,11 +76,6 @@ namespace JwtWebApi.Services
         private string PasswordHashBcrypt(string currentPassword)
         {
             return BCrypt.Net.BCrypt.HashPassword(currentPassword);
-        }
-
-        private bool UserExists(string username, string email)
-        {
-            return _context.Users.Any(e => e.Username == username && e.Email == email);
         }
     }
 }
