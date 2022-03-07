@@ -30,7 +30,7 @@ namespace JwtWebApi.Services
 
         public bool UserExists(string username, string email)
         {
-            return _context.Users.Any(e => e.Username == username && e.Email == email);
+            return _context.Users.Any(e => e.Username == username || e.Email == email);
         }
     }
 }
