@@ -14,7 +14,8 @@ namespace JwtWebApi.Context
         protected override void OnModelCreating(ModelBuilder builder)
         {
             // definir la llave primaria (llave compuesta) en la relación Many-To-Many
-            builder.Entity<UserRol>().HasKey(ur => new { ur.UserId, ur.RolId });
+            builder.Entity<UserRol>()
+                .HasKey(ur => new { ur.UserId, ur.RolId });
 
             // definir la relación o Foreign Key
             // User
@@ -29,6 +30,9 @@ namespace JwtWebApi.Context
                 .HasOne<Rol>(ur => ur.Rol)
                 .WithMany(r => r.UserRol)
                 .HasForeignKey(ur => ur.RolId);
+
+            //execute the seed
+            builder.Seed();
         }
     }
 }
